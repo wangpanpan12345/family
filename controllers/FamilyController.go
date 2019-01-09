@@ -25,14 +25,14 @@ func (c *FamilyController) AddMember() {
 
 	member := map[string]interface{}{
 		"id":    id,
-		"name":  "王嘉硕",
-		"sex":   1,
+		"name":  "王莎",
+		"sex":   2,
 		"edu":   "",
 		"birth": "",
-		"bf":    24,
+		"bf":    23,
 		"info":  "",
 	}
-	nodeNum, refNum, err := memberModel.NewMember(member, "98ffa4797d40cb5bac35504b9307ce37", []string{"father", "daughter"})
+	nodeNum, refNum, err := memberModel.NewMember(member, "3f491a2f55b11f63fd955af9c49cfca6", []string{"father", "daughter"})
 
 	if err != nil {
 		beego.Debug(err)
@@ -71,16 +71,45 @@ func (c *FamilyController) SearchMember() {
 //搜索一个成员
 func (c *FamilyController) ShowThreeMember() {
 	id := c.Input().Get("id")
-	id = "eb3cb4bc37d487a808bd54885a7f5e8a"
+	// id = "eb3cb4bc37d487a808bd54885a7f5e8a"
 	memberModel := models.Member{}
-	ms := memberModel.ListG3Member(id)
+	ms, js := memberModel.ListG3Member(id)
+	for k, v := range ms {
+		beego.Debug(k, v)
+	}
 
-	beego.Debug(ms)
+	// beego.Debug(ms)
 	resp := Response{}
-	resp.Data = ms
+	resp.Data = js
+	resp.Pager = ms
 	resp.Errcode = 0
 	resp.Errmsg = "success"
 	c.Data["json"] = resp
+
+	c.ServeJSON()
+	// beego.Debug(ms)
+}
+
+//搜索一个成员
+func (c *FamilyController) ComputeMember() {
+	id1 := c.Input().Get("id1")
+	id2 := c.Input().Get("id2")
+
+	// id = "eb3cb4bc37d487a808bd54885a7f5e8a"
+	memberModel := models.Member{}
+	ms, js := memberModel.ComputeMember(id1, id2)
+	for k, v := range ms {
+		beego.Debug(k, v)
+	}
+
+	// beego.Debug(ms)
+	resp := Response{}
+	resp.Data = js
+	resp.Pager = ms
+	resp.Errcode = 0
+	resp.Errmsg = "success"
+	c.Data["json"] = resp
+
 	c.ServeJSON()
 	// beego.Debug(ms)
 }

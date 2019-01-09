@@ -2,10 +2,12 @@ package models
 
 import (
 	"crypto/md5"
+	// "encoding/json"
 	"fmt"
 	bolt "github.com/johnnadratowski/golang-neo4j-bolt-driver"
 	"github.com/johnnadratowski/golang-neo4j-bolt-driver/structures/graph"
 	"io"
+	"sort"
 	"strconv"
 	"time"
 )
@@ -51,14 +53,14 @@ func queryStatement(st bolt.Stmt) bolt.Rows {
 	return rows
 }
 
-func consumeMetadata(rows bolt.Rows, st bolt.Stmt) []graph.Path {
+func consumeMetadata(rows bolt.Rows, st bolt.Stmt) (gps []graph.Path, js QT) {
 	// Here we loop through the rows until we get the metadata object
 	// back, meaning the row stream has been fully consumed
 
 	var err error
 	err = nil
 
-	gps := []graph.Path{}
+	gps = []graph.Path{}
 
 	for err == nil {
 		var row []interface{}
@@ -70,11 +72,210 @@ func consumeMetadata(rows bolt.Rows, st bolt.Stmt) []graph.Path {
 		} else if err != io.EOF {
 			gps = append(gps, row[0].(graph.Path))
 
-			fmt.Printf("PATH: %#v\n", row[0].(graph.Path)) // Prints all paths
+			// fmt.Printf("PATH: %#v\n", row[0].(graph.Path)) // Prints all paths
 		}
 	}
 	st.Close()
-	return gps
+	js = computeRel(gps)
+	return
+}
+
+type Node struct {
+	Name string
+	BF   int64
+	Son  []string
+	ID   string
+	Rel  string
+}
+
+type QT struct {
+	Name  string        `json:"name"`
+	Child []interface{} `json:"children,omitempty"`
+	// Value string
+}
+
+func computeRel(gps []graph.Path) QT {
+	// type child struct {
+	// 	Name string
+	// }
+
+	node := map[string]Node{}
+
+	bf := map[string]int64{}
+
+	// json := map[string][]interface{}{}
+	// ch := child{}
+	// js := rel{}
+	var last string
+	for i := 0; i < len(gps); i++ {
+
+		g := gps[i]
+		nodes := g.Nodes
+		for j := 0; j < len(nodes); j++ {
+
+			ID := nodes[j].Properties["id"].(string)
+
+			n := Node{}
+			n.Name = nodes[j].Properties["name"].(string)
+			n.BF = nodes[j].Properties["bf"].(int64)
+			n.ID = ID
+			_, ok := node[ID]
+
+			bf[ID] = n.BF
+
+			if j > 0 {
+				r := g.Relationships[j-1].Type
+				// fmt.Println(r)
+				if r == "father" {
+
+					lastNode := node[last]
+					// fmt.Println("father", lastNode)
+					fmt.Println("befor", lastNode)
+					if lastNode.BF < n.BF {
+						if ok {
+							tmp := lastNode.Son
+							tmp = append(tmp, ID)
+							lastNode.Son = tmp
+							node[last] = lastNode
+						} else {
+							tmp := lastNode.Son
+							tmp = append(tmp, ID)
+							lastNode.Son = tmp
+							node[last] = lastNode
+							node[n.ID] = n
+						}
+					} else {
+						if ok {
+							tNode := node[ID]
+							tp := tNode.Son
+							tp = append(tp, last)
+							tNode.Son = tp
+							node[ID] = tNode
+						} else {
+							n.Son = append(n.Son, last)
+							node[n.ID] = n
+						}
+					}
+					// if (last == )
+					fmt.Println("add father", n.Name, node)
+
+					// node[last] = lastNode
+					// fmt.Println(lastNode)
+				}
+				if r == "son" || r == "daughter" {
+					// fmt.Println("son", n)
+					lastNode := node[last]
+					fmt.Println("befor", lastNode)
+					// fmt.Println("father", lastNode)
+
+					if lastNode.BF < n.BF {
+						if ok {
+							tmp := lastNode.Son
+							tmp = append(tmp, ID)
+							lastNode.Son = tmp
+							node[last] = lastNode
+						} else {
+							tmp := lastNode.Son
+							tmp = append(tmp, ID)
+							lastNode.Son = tmp
+							node[last] = lastNode
+							node[n.ID] = n
+						}
+					} else {
+						if ok {
+							tNode := node[ID]
+							tp := tNode.Son
+							tp = append(tp, last)
+							tNode.Son = tp
+							node[ID] = tNode
+						} else {
+							n.Son = append(n.Son, last)
+							node[n.ID] = n
+						}
+
+					}
+					// node[n.ID] = n
+					fmt.Println("add son", n.Name, node)
+
+				}
+				if r == "wife" || r == "husband" {
+
+				}
+
+			} else {
+				if !ok && ID != "" {
+					node[n.ID] = n
+				}
+			}
+			last = ID
+
+		}
+		// fmt.Println(g.Nodes)
+
+	}
+	fmt.Println(node)
+	fmt.Println(bf)
+	js := D3(node, bf)
+	return js
+
+}
+
+func D3(node map[string]Node, bf map[string]int64) QT {
+
+	hack := map[int]string{}
+	hackkeys := []int{}
+	for key, val := range bf {
+		hack[int(val)] = key
+		hackkeys = append(hackkeys, int(val))
+	}
+	sort.Ints(hackkeys)
+	// var l
+	js := QT{}
+	for _, val := range hackkeys {
+		fmt.Println(hack[int(val)], val)
+
+		js = createNode(hack[int(val)], node)
+		// res, err := json.Marshal(js)
+		// fmt.Println(string(res), err)
+		break
+		// fmt.Println("gogogogo", t)
+		// tmp.Child =
+
+	}
+
+	return js
+
+}
+
+func createNode(id string, node map[string]Node) QT {
+	var tmp QT
+	nodetmp := node[id]
+	tmp.Name = nodetmp.Name
+	// tmp.Value = nodetmp.ID
+	sons := unique(nodetmp.Son)
+	fmt.Println("how many son", len(sons))
+	if len(sons) > 0 {
+		for i := 0; i < len(sons); i++ {
+			var tt QT
+			tt = createNode(sons[i], node)
+			tmp.Child = append(tmp.Child, tt)
+		}
+
+	}
+	fmt.Println("goooo", tmp)
+	return tmp
+}
+
+func unique(intSlice []string) []string {
+	keys := make(map[string]bool)
+	list := []string{}
+	for _, entry := range intSlice {
+		if _, value := keys[entry]; !value {
+			keys[entry] = true
+			list = append(list, entry)
+		}
+	}
+	return list
 }
 
 func consumeRows(rows bolt.Rows, st bolt.Stmt) []Member {
@@ -154,17 +355,30 @@ func (m *Member) ListMember() {
 
 }
 
-func (m *Member) ListG3Member(id string) []graph.Path {
+func (m *Member) ListG3Member(id string) ([]graph.Path, QT) {
 	con := createConnection()
 	defer con.Close()
-	RelationNode := "MATCH (p1:Member),(p2),path = shortestpath((p1)-[*1..2]-(p2)) where p1.id='" + id + "' and  p1.id<>p2.id RETURN path"
+	RelationNode := "MATCH (p1:Member),(p2),path = shortestpath((p1)-[*1..3]-(p2)) where p1.id='" + id + "' and  p1.id<>p2.id RETURN path"
 	// RelationNode := "MATCH path=(n:Member)-[*1..2]->(m) where n.id='" + id + "' RETURN path"
 	st := prepareSatement(RelationNode, con)
 	rows := queryStatement(st)
 	// fmt.Println(rows)
-	gps := consumeMetadata(rows, st)
+	gps, js := consumeMetadata(rows, st)
 
-	return gps
+	return gps, js
+}
+
+func (m *Member) ComputeMember(id1, id2 string) ([]graph.Path, QT) {
+	con := createConnection()
+	defer con.Close()
+	RelationNode := "MATCH (p1:Member),(p2:Member) ,path = shortestpath((p1)-[*]-(p2)) where p1.id='" + id1 + "' and  p2.id='" + id2 + "' RETURN path"
+	// RelationNode := "MATCH path=(n:Member)-[*1..2]->(m) where n.id='" + id + "' RETURN path"
+	st := prepareSatement(RelationNode, con)
+	rows := queryStatement(st)
+	// fmt.Println(rows)
+	gps, js := consumeMetadata(rows, st)
+
+	return gps, js
 }
 
 func (m *Member) GetMember(name string) []Member {

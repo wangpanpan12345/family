@@ -19,6 +19,7 @@ func init() {
 			beego.NSRouter("/list", &controllers.FamilyController{}, "get:ListMember"),
 			beego.NSRouter("/q", &controllers.FamilyController{}, "get:SearchMember"),
 			beego.NSRouter("/node/ref", &controllers.FamilyController{}, "get:ShowThreeMember"),
+			beego.NSRouter("/node/comp", &controllers.FamilyController{}, "get:ComputeMember"),
 		)
 
 	beego.AddNamespace(ns)

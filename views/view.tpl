@@ -7,6 +7,7 @@
 		<!-- <link rel="stylesheet" href="https://unpkg.com/element-ui/lib/theme-chalk/index.css"> -->
 		<!-- 引入组件库 -->
 		<!-- <script src="https://unpkg.com/element-ui/lib/index.js"></script> -->
+		<script src="https://cdn.bootcss.com/echarts/4.2.0-rc.2/echarts.min.js"></script>
 		<style type="text/css">
 			body,html{
 				margin: 0;
@@ -118,16 +119,18 @@
 				margin: 5px 3px;
 			}
 			.panel{
-				display: flex;
-				flex-direction: row;
+				/*display: flex;*/
+				/*flex-direction: row;*/
 
 			}
 			.member-info{
-				width: 40%;
-				height: auto;
+				/*width: 40%;*/
+				/*height: auto;*/
+				height: 300px;
 				background: #ffff;
 				border-radius: 5px;
 				padding: 20px;
+				margin:0 20%;
 			}
 			.member-info span{
 				display: block;
@@ -140,7 +143,9 @@
 		<div class="family">
 			<div class="search">
 				<span class="search-input">
-					<input type="text" class="RNNXgb"  placeholder="请输入姓名" name="">
+					<input type="text" class="RNNXgb" id="c3" placeholder="请输入姓名" name="">
+					<input type="text" class="RNNXgb" id="c2"  placeholder="请输入姓名" name="">
+					<div><a href="javascript:void(0);" class="compute">计算</a></div>
 				</span>
 				<span class="search-list">
 					<div class="el-autocomplete-suggestion">
@@ -159,23 +164,95 @@
 			</div>
 
 			<div class="panel">
-				<div class="member-info">
-					<span class="" id="name">姓名:</span>
+				<div class="member-info" id="main">
+					<!-- <span class="" id="name">姓名:</span>
 					<span class="" id="sex">性别:</span>
-					<!-- <span class="" id="bf">辈分:23世</span> -->
-					<span class="" id="info">简介:</span>
+					<span class="" id="bf">辈分:23世</span>
+					<span class="" id="info">简介:</span> -->
 				</div>
-				<div class="member-compute-tobe">
+				<!-- <div class="member-compute-tobe">
 					<span></span>
 					<span></span>
 				</div>
-				
+				 -->
 			</div>
+			
 
 		</div>
 
+		<!-- <div id="main" style="width: 600px;height:400px;"></div> -->
+
 		<script src="https://cdn.bootcss.com/jquery/3.3.1/jquery.min.js"></script>
 		<script type="text/javascript">
+
+			var myChart = echarts.init(document.getElementById('main'));
+
+			function getData(url){
+				myChart.showLoading();
+
+				$.get(url, function (data) {
+
+				console.log(data)
+				data = data.data
+			    myChart.hideLoading();
+
+			    myChart.setOption(option = {
+			        tooltip: {
+			            trigger: 'item',
+			            triggerOn: 'mousemove'
+			        },
+			        series:[
+			            {
+			                type: 'tree',
+
+			                data: [data],
+
+			                left: '2%',
+			                right: '2%',
+			                top: '8%',
+			                bottom: '20%',
+
+			                symbol: 'emptyCircle',
+
+			                orient: 'vertical',
+
+			                expandAndCollapse: true,
+
+			                label: {
+			                    normal: {
+			                    	fontWeight : 300,
+			                        position: 'top',
+			                        rotate: 0,
+			                        verticalAlign: 'top',
+			                        align: 'right',
+			                        fontSize: 18,
+			                        padding :10,
+			                        color: 'rgba(64,158,255,0.8)'
+
+			                    },
+			                   
+			                },
+
+			                leaves: {
+			                    label: {
+			                        normal: {
+			                            position: 'bottom',
+			                            rotate: 0,
+			                            verticalAlign: 'top',
+			                            align: 'center',			                       
+			                            padding :5
+			                        }
+			                    }
+			                },
+
+			                animationDurationUpdate: 750
+			            }
+			        ]
+			    });
+			});
+			}
+			
+
 			
 			function _debounce(func, wait, immediate) {
                 var timeout, args, context, timestamp, result;
@@ -226,10 +303,56 @@
             });	
 
 	        $(".search-list").on("click",".member-item",function(){
-	        	$('.RNNXgb').val($(this).children(".info").text());
+	        	// $(this).parent(".el-scrollbar").parent("")
+	        	var iid = $(this).attr("iid");
+	        	// alert(iid);
+	        	$("#"+iid).val($(this).children(".info").text());
+	        	// $('.RNNXgb').val($(this).children(".info").text());
+	        	var id = $(this).attr("data-id");
+	        	$("#"+iid).attr("data-id",id);
+	        	getData('/member/node/ref?id='+id);
 	        	$(".el-scrollbar").children().remove();
 	        });
-			function Search(url){
+
+	        $(".compute").click(function(){
+
+	        	var id_ = $("#c2").attr("data-id");
+	        	// console.log(id_)
+	        	var id2 = $("#c3").attr("data-id");
+	        	
+        		if (id_ =="" || id2==""){
+               		return false;
+               	}
+               	url = '/member/node/comp?id1='+id_+'&id2='+id2;
+               	console.log(url);
+               	getData(url);
+	            // Compute("/node/comp?id1="+id1+"&id2="+id2, $(this));
+
+
+	        });
+
+	        function Compute(url,dom){
+	        	 $.ajax({
+	                method: "Get",
+	                url: url,
+	                // contentType: "application/json;charset=utf-8",
+	                // dataType: "json",
+	                // data: JSON.stringify(param),
+	                success: function (data) {
+	                    if (data.code == "0") {
+	                       	
+	                      	
+	                    } else {
+	                        console.log(data);
+	                    }
+	                },
+	                error: function (data) {
+	                    alert("服务器出错！请联系管理员！");
+	                }
+	            });
+	        }
+
+			function Search(url,dom){
 	        	 $.ajax({
 	                method: "Get",
 	                url: url,
@@ -241,14 +364,15 @@
 	                       	console.log(data)
 	                       	var html = ""
 	                       	
+	                       	var id = dom.attr("id")
 	                       	$.each(data.data,function(n,item){
-	                       		html = html + `<li class="member-item" data-id= `+item.id+`>
+	                       		html = html + `<li class="member-item" data-id= `+item.id+` iid = `+id+` >
 									<span><img class="avatar" src="/static/img/test.png" /></span>
 									<span class="info">`+item.name+`</span>
 								</li>`
 	                       	})
-	                       	
-	                       	$(".el-scrollbar").html(html)
+	                       	dom.parent(".search-input").siblings(".search-list").find(".el-scrollbar").html(html)
+	                       	// $(".el-scrollbar").html(html)
 	                      	
 	                    } else {
 	                        console.log(data);
