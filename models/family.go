@@ -250,7 +250,7 @@ func D3(node map[string]Node, bf map[string]int64) QT {
 func createNode(id string, node map[string]Node) QT {
 	var tmp QT
 	nodetmp := node[id]
-	tmp.Name = nodetmp.Name
+	tmp.Name = nodetmp.Name + "|" + strconv.FormatInt(nodetmp.BF, 10)
 	// tmp.Value = nodetmp.ID
 	sons := unique(nodetmp.Son)
 	fmt.Println("how many son", len(sons))
@@ -358,7 +358,7 @@ func (m *Member) ListMember() {
 func (m *Member) ListG3Member(id string) ([]graph.Path, QT) {
 	con := createConnection()
 	defer con.Close()
-	RelationNode := "MATCH (p1:Member),(p2),path = shortestpath((p1)-[*1..3]-(p2)) where p1.id='" + id + "' and  p1.id<>p2.id RETURN path"
+	RelationNode := "MATCH (p1:Member),(p2),path = shortestpath((p1)-[*1..2]-(p2)) where p1.id='" + id + "' and  p1.id<>p2.id RETURN path"
 	// RelationNode := "MATCH path=(n:Member)-[*1..2]->(m) where n.id='" + id + "' RETURN path"
 	st := prepareSatement(RelationNode, con)
 	rows := queryStatement(st)
@@ -384,7 +384,7 @@ func (m *Member) ComputeMember(id1, id2 string) ([]graph.Path, QT) {
 func (m *Member) GetMember(name string) []Member {
 	con := createConnection()
 	defer con.Close()
-	GetNode := "match(m:Member) where m.name =~'.*" + name + ".*' return m"
+	GetNode := "match(m:Member) where m.name =~'.*" + name + ".*' return m Limit 10"
 	// GetNode := "MATCH (m:Member) where m.name='" + name + "' return m"
 	st := prepareSatement(GetNode, con)
 	rows := queryStatement(st)

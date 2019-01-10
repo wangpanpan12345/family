@@ -3,6 +3,7 @@ package controllers
 import (
 	"family/models"
 	"github.com/astaxie/beego"
+	"strconv"
 )
 
 type FamilyController struct {
@@ -17,6 +18,27 @@ func (c *FamilyController) Get() {
 //添加一个成员
 func (c *FamilyController) AddMember() {
 
+	s := c.Input().Get("sex")
+	name := c.Input().Get("name")
+	father := c.Input().Get("father")
+
+	si, err := strconv.Atoi(s)
+
+	sex := ""
+	if si == 1 {
+		sex = "son"
+	} else if si == 2 {
+		sex = "daughter"
+	} else {
+		return
+	}
+	if name == "" || father == "" {
+		return
+	}
+
+	beego.Debug(si, sex, name, father)
+	// return
+
 	memberModel := models.Member{}
 	id := memberModel.IdGen()
 
@@ -25,20 +47,31 @@ func (c *FamilyController) AddMember() {
 
 	member := map[string]interface{}{
 		"id":    id,
-		"name":  "王莎",
-		"sex":   2,
+		"name":  name,
+		"sex":   si,
 		"edu":   "",
 		"birth": "",
-		"bf":    23,
+		"bf":    24,
 		"info":  "",
 	}
-	nodeNum, refNum, err := memberModel.NewMember(member, "3f491a2f55b11f63fd955af9c49cfca6", []string{"father", "daughter"})
+	nodeNum, refNum, err := memberModel.NewMember(member, father, []string{"father", sex})
 
 	if err != nil {
 		beego.Debug(err)
 	}
 
+	rep := Response{}
+	if nodeNum == 1 && refNum == 1 {
+		rep.Data = 0
+		rep.Errcode = 0
+		rep.Errmsg = "success"
+
+	}
 	beego.Debug(nodeNum, refNum)
+
+	c.Data["json"] = rep
+	c.ServeJSON()
+
 	// beego.Debug(member)
 
 }

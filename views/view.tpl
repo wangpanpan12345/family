@@ -2,6 +2,10 @@
 
 	<head>
 		<meta charset="utf-8">
+		<link rel="icon" href="/static/img/home.png" type="image/x-icon" />
+		<link rel="shortcut icon" href="/static/img/home.png" type="image/x-icon"/>
+		<meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=0.5, maximum-scale=2.0, user-scalable=yes" />
+
 		<title>王氏</title>
 		<!-- 引入样式 -->
 		<!-- <link rel="stylesheet" href="https://unpkg.com/element-ui/lib/theme-chalk/index.css"> -->
@@ -60,10 +64,11 @@
 			}
 			.search {
 				width: 100%;
-				margin: 20px 0;
+				/*margin: 20px 0;*/
 				margin-top: 50px;
 			}
 			.search-input{
+				position: relative;
 				display: block;
 				width: 100%;
 				text-align: center;
@@ -80,6 +85,7 @@
 			    /*width: 484px;*/
 			}
 			.search-list{
+				position: relative;
 				display: flex;
 				/*align-items: center;*/
 				justify-content: center;
@@ -87,8 +93,11 @@
 				padding:0 20%;
 			}
 			.el-autocomplete-suggestion{
+				position: absolute;
 				background: #fff;
-				width: 100%
+				/*width: 100%*/
+			    width: 60%;
+			    z-index: 20;
 
 			}
 			.el-scrollbar{
@@ -126,16 +135,65 @@
 			.member-info{
 				/*width: 40%;*/
 				/*height: auto;*/
-				height: 300px;
+				height: 1000px;
 				background: #ffff;
 				border-radius: 5px;
 				padding: 20px;
-				margin:0 20%;
+				margin:0 0%;
 			}
 			.member-info span{
 				display: block;
 			}
-						
+			.compute-button{
+				position: absolute;
+			    right: 20%;
+			    top: 50%;
+			    margin-top: -15px;
+			}
+			.compute{
+				padding: 5px 20px;
+			    background: #409eff;
+			    color: #fff;
+			    /*border-radius: 5px;*/
+			    text-decoration: none;
+			    height: 20px;
+			    display: inline-block;
+			    line-height: 20px;
+			    display: inline-block;
+			    /*line-height: 1;*/
+			    white-space: nowrap;
+			    cursor: pointer;
+			    -webkit-appearance: none;
+			    text-align: center;
+			    outline: none;
+			    transition: .1s;
+			    font-weight: 500;
+			    -moz-user-select: none;
+			    -webkit-user-select: none;
+			    -ms-user-select: none;
+			    font-size: 14px;
+			    /*border-radius: 4px;*/
+			}
+
+			@media screen and (max-width: 768px) {
+			    .family{
+			    	padding: 0;
+			    }
+			    .member-info{
+			    	padding: 0;
+			    	margin: 0 3%;
+			    }
+			    input[type="text"]{
+			    	width: 90%;
+			    }
+			    .compute-button{
+			    	right: 5%;
+			    }
+			    .el-autocomplete-suggestion{
+			    	width: 90%;
+			    }
+			}
+									
 		</style>
 	</head>
 	<body>
@@ -145,7 +203,7 @@
 				<span class="search-input">
 					<input type="text" class="RNNXgb" id="c3" placeholder="请输入姓名" name="">
 					<input type="text" class="RNNXgb" id="c2"  placeholder="请输入姓名" name="">
-					<div><a href="javascript:void(0);" class="compute">计算</a></div>
+					<div class="compute-button"><a href="javascript:void(0);" class="compute">计算关系</a></div>
 				</span>
 				<span class="search-list">
 					<div class="el-autocomplete-suggestion">
@@ -187,12 +245,14 @@
 
 			var myChart = echarts.init(document.getElementById('main'));
 
-			function getData(url){
+			function getData(url,name1,name2){
 				myChart.showLoading();
+
+				myChart.clear();
 
 				$.get(url, function (data) {
 
-				console.log(data)
+				// console.log(data)
 				data = data.data
 			    myChart.hideLoading();
 
@@ -212,22 +272,101 @@
 			                top: '8%',
 			                bottom: '20%',
 
-			                symbol: 'emptyCircle',
+
+
+			                // symbol: 'emptyCircle',
+
+			                symbol:"path://M512 538.1c130.9 0 237-106.1 237-237s-106.1-237-237-237-237 106.1-237 237 106.1 237 237 237z m0 110.6c-218.2 0-395.1 69.7-395.1 155.6S293.8 960 512 960s395.1-69.7 395.1-155.6S730.2 648.7 512 648.7z",
+			               
+			                symbolSize : 15,
+
+			                borderColor : 'rgba(64,158,255,0.8)',
 
 			                orient: 'vertical',
 
 			                expandAndCollapse: true,
+			                initialTreeDepth : -1,
+
+
+			                color: {
+							    type: 'linear',
+							    x: 0,
+							    y: 0,
+							    x2: 0,
+							    y2: 1,
+							    colorStops: [{
+							        offset: 0, color: 'red' // 0% 处的颜色
+							    }, {
+							        offset: 1, color: 'blue' // 100% 处的颜色
+							    }],
+							    globalCoord: false // 缺省为 false
+							},
 
 			                label: {
+
+
 			                    normal: {
-			                    	fontWeight : 300,
+			                    	formatter: function (value) {
+			                			// console.log(value,name1);
+			                			var name = value.data.name;
+			                			arr=name.split("|");
+			                			// console.log(arr[0]);
+			                			var cen = "第"+arr[1]+"世"
+			                			if (arr[1]==1){
+			                				cen = "高祖"
+			                			}
+			                			if (arr[1]==2){
+			                				cen = "二组"
+			                			}
+			                			if (arr[1]==3){
+			                				cen = "三组"
+			                			}
+			                			if (arr[0] == name1){			            		
+											return '{nameh|' + arr[0] + '}\n{centryh|' + cen + '}';
+			                			}else{
+			                				return '{name|' + arr[0] + '}\n{centry|' + cen + '}';
+			                			}
+			                			// return value.data.name;
+					                	
+					            	},
+					            	rich: {
+						            	name: {
+						            		fontSize: 14,
+						                    lineHeight: 20,
+						                    align: 'center',
+						                   
+						                },
+						                nameh: {
+						                	fontSize: 14,
+						                    lineHeight: 20,
+						                    align: 'center',
+						                    color: 'rgba(103,194,58,0.8)'
+						                },
+						                centry: {
+						                    // height: 20,
+						                    fontSize: 12,
+						                    align: 'center'
+						                },
+						                centryh: {
+						                	fontSize: 12,
+						                	align: 'center',
+						                	color: 'rgba(103,194,58,0.8)'
+						                }
+						            },
+			                    	fontWeight : 500,
 			                        position: 'top',
 			                        rotate: 0,
 			                        verticalAlign: 'top',
 			                        align: 'right',
-			                        fontSize: 18,
-			                        padding :10,
-			                        color: 'rgba(64,158,255,0.8)'
+			                        fontSize: 16,
+			                        padding : [ 0,  // 上
+											    15, // 右
+											    0,  // 下
+											    10, // 左
+											   ],
+			                        // color: 'rgba(64,158,255,0.8)'
+			                        color: 'rgba(0,0,0,0.8)'
+
 
 			                    },
 			                   
@@ -236,11 +375,11 @@
 			                leaves: {
 			                    label: {
 			                        normal: {
-			                            position: 'bottom',
+			                            position: 'top',
 			                            rotate: 0,
 			                            verticalAlign: 'top',
-			                            align: 'center',			                       
-			                            padding :5
+			                            align: 'center',		                       
+			                            padding :20
 			                        }
 			                    }
 			                },
@@ -309,8 +448,12 @@
 	        	$("#"+iid).val($(this).children(".info").text());
 	        	// $('.RNNXgb').val($(this).children(".info").text());
 	        	var id = $(this).attr("data-id");
+	        	var bf = $(this).attr("bf");
 	        	$("#"+iid).attr("data-id",id);
-	        	getData('/member/node/ref?id='+id);
+	        	$("#"+iid).attr("bf",bf);
+	        	var name = $(this).children(".info").text();
+
+	        	getData('/member/node/ref?id='+id,name,"");
 	        	$(".el-scrollbar").children().remove();
 	        });
 
@@ -320,11 +463,12 @@
 	        	// console.log(id_)
 	        	var id2 = $("#c3").attr("data-id");
 	        	
-        		if (id_ =="" || id2==""){
+        		if (typeof(id_) =="undefined" || typeof(id2)=="undefined"){
+        			alert("两个姓名都要输入");
                		return false;
                	}
                	url = '/member/node/comp?id1='+id_+'&id2='+id2;
-               	console.log(url);
+              
                	getData(url);
 	            // Compute("/node/comp?id1="+id1+"&id2="+id2, $(this));
 
@@ -366,7 +510,7 @@
 	                       	
 	                       	var id = dom.attr("id")
 	                       	$.each(data.data,function(n,item){
-	                       		html = html + `<li class="member-item" data-id= `+item.id+` iid = `+id+` >
+	                       		html = html + `<li class="member-item" data-id= `+item.id+` iid = `+id+` bf= `+item.bf+` >
 									<span><img class="avatar" src="/static/img/test.png" /></span>
 									<span class="info">`+item.name+`</span>
 								</li>`
