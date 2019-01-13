@@ -2,6 +2,7 @@
 <head>
     <meta charset="UTF-8"/>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=0.5, maximum-scale=2.0, user-scalable=yes" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge"/>
     <title>家谱登录</title>
     <link rel="shortcut icon" href="/static/img/home.png" type="image/x-icon"/>
 
@@ -94,7 +95,7 @@
             text-align: justify;
             line-height: 30px;
         }
-        
+
         @media screen and (max-width: 768px) {
             .forhead{
                 display: none;

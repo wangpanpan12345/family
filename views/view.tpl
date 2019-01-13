@@ -5,6 +5,7 @@
 		<link rel="icon" href="/static/img/home.png" type="image/x-icon" />
 		<link rel="shortcut icon" href="/static/img/home.png" type="image/x-icon"/>
 		<meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=0.5, maximum-scale=2.0, user-scalable=yes" />
+		<meta http-equiv="X-UA-Compatible" content="IE=edge"/>
 
 		<title>尚贤王氏族谱</title>
 		<!-- 引入样式 -->
