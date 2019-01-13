@@ -11,6 +11,7 @@ type ResponseController struct {
 //Response 结构体
 type Response struct {
 	Errcode int         `json:"code"`
+	Diff    int64       `json:"diff"`
 	Errmsg  string      `json:"msg"`
 	Data    interface{} `json:"data"`
 	Pager   interface{} `json:"page,omitempty"`

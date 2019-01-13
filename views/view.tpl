@@ -6,7 +6,7 @@
 		<link rel="shortcut icon" href="/static/img/home.png" type="image/x-icon"/>
 		<meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=0.5, maximum-scale=2.0, user-scalable=yes" />
 
-		<title>王氏</title>
+		<title>尚贤王氏族谱</title>
 		<!-- 引入样式 -->
 		<!-- <link rel="stylesheet" href="https://unpkg.com/element-ui/lib/theme-chalk/index.css"> -->
 		<!-- 引入组件库 -->
@@ -17,7 +17,7 @@
 				margin: 0;
 				padding: 0;
 				border: 0;
-				background: #f7f7f7;
+				background: #fff;
 				font-family: "Helvetica Neue",Helvetica,"PingFang SC","Hiragino Sans GB","Microsoft YaHei","微软雅黑",Arial,sans-serif;
 
 			}
@@ -89,7 +89,7 @@
 				display: flex;
 				/*align-items: center;*/
 				justify-content: center;
-				margin:4px 0;
+				margin:1px 0;
 				padding:0 20%;
 			}
 			.el-autocomplete-suggestion{
@@ -102,10 +102,12 @@
 			}
 			.el-scrollbar{
 
+				border: 1px solid #d7d7d7;
+
 			}
 			.el-autocomplete-suggestion li {
 			    padding: 0 20px;
-			    margin: 0;
+			    /*margin: 0 20px;*/
 			    line-height: 34px;
 			    cursor: pointer;
 			    color: #606266;
@@ -116,6 +118,10 @@
 			    text-overflow: ellipsis;
 			    display: flex;
 			    align-items: center;
+			}
+
+			.el-autocomplete-suggestion li:hover{
+				background: #f7f7f7;
 			}
 
 			.avatar {
@@ -135,8 +141,8 @@
 			.member-info{
 				/*width: 40%;*/
 				/*height: auto;*/
-				height: 1000px;
-				background: #ffff;
+				/*height: 1000px;*/
+				/*background: #ffff;*/
 				border-radius: 5px;
 				padding: 20px;
 				margin:0 0%;
@@ -148,7 +154,7 @@
 				position: absolute;
 			    right: 20%;
 			    top: 50%;
-			    margin-top: -15px;
+			    margin-top: -7px;
 			}
 			.compute{
 				padding: 5px 20px;
@@ -173,6 +179,15 @@
 			    -ms-user-select: none;
 			    font-size: 14px;
 			    /*border-radius: 4px;*/
+			}
+			.cation{
+				width: 60%;
+			    display: -webkit-inline-box;
+			    text-align: left;
+			    opacity: .7;
+			    color: #a2a2a2;
+			    font-weight: 300;
+			    font-size: 12px;
 			}
 
 			@media screen and (max-width: 768px) {
@@ -200,22 +215,18 @@
 
 		<div class="family">
 			<div class="search">
+
 				<span class="search-input">
+					<span class="cation">注：数据更新至2014年</span>
 					<input type="text" class="RNNXgb" id="c3" placeholder="请输入姓名" name="">
 					<input type="text" class="RNNXgb" id="c2"  placeholder="请输入姓名" name="">
 					<div class="compute-button"><a href="javascript:void(0);" class="compute">计算关系</a></div>
 				</span>
+
 				<span class="search-list">
 					<div class="el-autocomplete-suggestion">
 						<ul class="el-scrollbar">
-							<!-- <li class="">
-								<span><img class="avatar" src="/static/img/test.png" /></span>
-								<span class="addr">长宁区新渔路144号</span>
-							</li> -->
-							<!-- <li class="">
-								<span><img class="avatar" src="/static/img/test.png" /></span>
-								<span class="addr">上海市长宁区淞虹路661号</span>
-							</li> -->
+							
 						</ul>
 					</div>
 				</span>
@@ -223,43 +234,67 @@
 
 			<div class="panel">
 				<div class="member-info" id="main">
-					<!-- <span class="" id="name">姓名:</span>
-					<span class="" id="sex">性别:</span>
-					<span class="" id="bf">辈分:23世</span>
-					<span class="" id="info">简介:</span> -->
+				
 				</div>
-				<!-- <div class="member-compute-tobe">
-					<span></span>
-					<span></span>
-				</div>
-				 -->
+			
 			</div>
 			
 
 		</div>
 
-		<!-- <div id="main" style="width: 600px;height:400px;"></div> -->
+
 
 		<script src="https://cdn.bootcss.com/jquery/3.3.1/jquery.min.js"></script>
 		<script type="text/javascript">
 
 			var myChart = echarts.init(document.getElementById('main'));
 
+			function toHTML(param){
+				return "<span style='font-size:20px;'>"+param+"</span>";
+			}
+
 			function getData(url,name1,name2){
+
+
 				myChart.showLoading();
 
 				myChart.clear();
 
 				$.get(url, function (data) {
 
-				// console.log(data)
+					var diff = data.diff
+
+					var ht = diff*(150-4*diff)
+					// console.log(height);
+					// $(".member-info").css({"height":height});
+
+				console.log(data)
 				data = data.data
 			    myChart.hideLoading();
-
+			    myChart.resize(opts = {
+			    	height : ht
+			    });
 			    myChart.setOption(option = {
 			        tooltip: {
 			            trigger: 'item',
-			            triggerOn: 'mousemove'
+			            triggerOn: 'mousemove',
+			            formatter: function (params,ticket,callback) {
+				            // console.log(params)
+				            var birth = params.data.birth
+				            var info = params.data.info 
+				            if (birth == ""){
+				            	birth = "暂无"
+				            }
+				            if( info == ""){
+				            	info = "暂无"
+				            }
+				            var res = '<div style="width:100%;text-align:center;"><img style="width:30px;height:30px;border-radius:50%;" src="http://imgsrc.baidu.com/imgad/pic/item/cc11728b4710b91250f4e5dbc9fdfc03924522d9.jpg"/></div><br/>出生日期 : '+birth+'<br/>' + '简介 : '+ info;
+ 				            setTimeout(function (){
+				                // 仅为了模拟异步回调
+				                callback(ticket, res);
+				            }, 500)
+				            return 'loading';
+				        }
 			        },
 			        series:[
 			            {
@@ -274,7 +309,7 @@
 
 
 
-			                // symbol: 'emptyCircle',
+			                // symbol: 'circle',
 
 			                symbol:"path://M512 538.1c130.9 0 237-106.1 237-237s-106.1-237-237-237-237 106.1-237 237 106.1 237 237 237z m0 110.6c-218.2 0-395.1 69.7-395.1 155.6S293.8 960 512 960s395.1-69.7 395.1-155.6S730.2 648.7 512 648.7z",
 			               
@@ -286,22 +321,29 @@
 
 			                expandAndCollapse: true,
 			                initialTreeDepth : -1,
+			                
+
+			                itemStyle : {
+
+				                color: {
+								    type: 'linear',
+								    x: 0,
+								    y: 0,
+								    x2: 0,
+								    y2: 1,
+								    colorStops: [{
+								        offset: 0, color: 'blue' // 0% 处的颜色
+								    }, {
+								        offset: 1, color: 'blue' // 100% 处的颜色
+								    }],
+								    globalCoord: false // 缺省为 false
+								}
 
 
-			                color: {
-							    type: 'linear',
-							    x: 0,
-							    y: 0,
-							    x2: 0,
-							    y2: 1,
-							    colorStops: [{
-							        offset: 0, color: 'red' // 0% 处的颜色
-							    }, {
-							        offset: 1, color: 'blue' // 100% 处的颜色
-							    }],
-							    globalCoord: false // 缺省为 false
-							},
+			                },
 
+
+			                
 			                label: {
 
 
@@ -312,19 +354,21 @@
 			                			arr=name.split("|");
 			                			// console.log(arr[0]);
 			                			var cen = "第"+arr[1]+"世"
+			                			var sex = value.data.sex
+			                			var sex_str = sex == 1?"(男)":"(女)"
 			                			if (arr[1]==1){
 			                				cen = "高祖"
 			                			}
 			                			if (arr[1]==2){
-			                				cen = "二组"
+			                				cen = "二祖"
 			                			}
 			                			if (arr[1]==3){
-			                				cen = "三组"
+			                				cen = "三祖"
 			                			}
 			                			if (arr[0] == name1){			            		
-											return '{nameh|' + arr[0] + '}\n{centryh|' + cen + '}';
+											return '{nameh|' + arr[0]+sex_str + '}\n{centryh|' + cen + '}';
 			                			}else{
-			                				return '{name|' + arr[0] + '}\n{centry|' + cen + '}';
+			                				return '{name|' + arr[0]+sex_str + '}\n{centry|' + cen + '}';
 			                			}
 			                			// return value.data.name;
 					                	
@@ -516,7 +560,6 @@
 								</li>`
 	                       	})
 	                       	dom.parent(".search-input").siblings(".search-list").find(".el-scrollbar").html(html)
-	                       	// $(".el-scrollbar").html(html)
 	                      	
 	                    } else {
 	                        console.log(data);

@@ -12,6 +12,8 @@ func init() {
 
 	beego.Router("/admin", &controllers.MainController{}, "*:Admin")
 
+	beego.Router("/admin/login", &controllers.MainController{}, "*:Login")
+
 	ns :=
 		beego.NewNamespace("/member",
 			beego.NSRouter("/", &controllers.FamilyController{}, "get:Get"),
@@ -20,6 +22,7 @@ func init() {
 			beego.NSRouter("/q", &controllers.FamilyController{}, "get:SearchMember"),
 			beego.NSRouter("/node/ref", &controllers.FamilyController{}, "get:ShowThreeMember"),
 			beego.NSRouter("/node/comp", &controllers.FamilyController{}, "get:ComputeMember"),
+			beego.NSRouter("/login", &controllers.FamilyController{}, "post:DCLogin"),
 		)
 
 	beego.AddNamespace(ns)

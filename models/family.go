@@ -23,7 +23,9 @@ type Member struct {
 }
 
 var (
-	URI = "bolt://neo4j:880821@localhost:7687"
+	// URI = "bolt://neo4j:880821@172.16.6.18:7687"
+
+	URI = "bolt://neo4j:880821@127.0.0.1:7687"
 )
 
 func createConnection() bolt.Conn {
@@ -53,7 +55,7 @@ func queryStatement(st bolt.Stmt) bolt.Rows {
 	return rows
 }
 
-func consumeMetadata(rows bolt.Rows, st bolt.Stmt) (gps []graph.Path, js QT) {
+func consumeMetadata(rows bolt.Rows, st bolt.Stmt) (gps []graph.Path, js QT, diff int64) {
 	// Here we loop through the rows until we get the metadata object
 	// back, meaning the row stream has been fully consumed
 
@@ -76,25 +78,31 @@ func consumeMetadata(rows bolt.Rows, st bolt.Stmt) (gps []graph.Path, js QT) {
 		}
 	}
 	st.Close()
-	js = computeRel(gps)
+	js, diff = computeRel(gps)
 	return
 }
 
 type Node struct {
-	Name string
-	BF   int64
-	Son  []string
-	ID   string
-	Rel  string
+	Name  string
+	BF    int64
+	Son   []string
+	ID    string
+	Rel   string
+	Sex   int64
+	Info  string
+	Birth string
 }
 
 type QT struct {
 	Name  string        `json:"name"`
+	Sex   int64         `json:"sex"`
+	Info  string        `json:"info"`
+	Birth string        `json:"birth"`
 	Child []interface{} `json:"children,omitempty"`
 	// Value string
 }
 
-func computeRel(gps []graph.Path) QT {
+func computeRel(gps []graph.Path) (QT, int64) {
 	// type child struct {
 	// 	Name string
 	// }
@@ -102,6 +110,9 @@ func computeRel(gps []graph.Path) QT {
 	node := map[string]Node{}
 
 	bf := map[string]int64{}
+
+	min := int64(1000)
+	var max int64
 
 	// json := map[string][]interface{}{}
 	// ch := child{}
@@ -118,6 +129,16 @@ func computeRel(gps []graph.Path) QT {
 			n := Node{}
 			n.Name = nodes[j].Properties["name"].(string)
 			n.BF = nodes[j].Properties["bf"].(int64)
+			n.Sex = nodes[j].Properties["sex"].(int64)
+			n.Info = nodes[j].Properties["info"].(string)
+			n.Birth = nodes[j].Properties["birth"].(string)
+
+			if n.BF < min {
+				min = n.BF
+			}
+			if n.BF > max {
+				max = n.BF
+			}
 			n.ID = ID
 			_, ok := node[ID]
 
@@ -215,8 +236,10 @@ func computeRel(gps []graph.Path) QT {
 	}
 	fmt.Println(node)
 	fmt.Println(bf)
+
+	fmt.Println(min, max)
 	js := D3(node, bf)
-	return js
+	return js, max - min
 
 }
 
@@ -229,6 +252,7 @@ func D3(node map[string]Node, bf map[string]int64) QT {
 		hackkeys = append(hackkeys, int(val))
 	}
 	sort.Ints(hackkeys)
+
 	// var l
 	js := QT{}
 	for _, val := range hackkeys {
@@ -251,6 +275,9 @@ func createNode(id string, node map[string]Node) QT {
 	var tmp QT
 	nodetmp := node[id]
 	tmp.Name = nodetmp.Name + "|" + strconv.FormatInt(nodetmp.BF, 10)
+	tmp.Sex = nodetmp.Sex
+	tmp.Info = nodetmp.Info
+	tmp.Birth = nodetmp.Birth
 	// tmp.Value = nodetmp.ID
 	sons := unique(nodetmp.Son)
 	fmt.Println("how many son", len(sons))
@@ -355,7 +382,7 @@ func (m *Member) ListMember() {
 
 }
 
-func (m *Member) ListG3Member(id string) ([]graph.Path, QT) {
+func (m *Member) ListG3Member(id string) ([]graph.Path, QT, int64) {
 	con := createConnection()
 	defer con.Close()
 	RelationNode := "MATCH (p1:Member),(p2),path = shortestpath((p1)-[*1..2]-(p2)) where p1.id='" + id + "' and  p1.id<>p2.id RETURN path"
@@ -363,12 +390,12 @@ func (m *Member) ListG3Member(id string) ([]graph.Path, QT) {
 	st := prepareSatement(RelationNode, con)
 	rows := queryStatement(st)
 	// fmt.Println(rows)
-	gps, js := consumeMetadata(rows, st)
+	gps, js, diff := consumeMetadata(rows, st)
 
-	return gps, js
+	return gps, js, diff
 }
 
-func (m *Member) ComputeMember(id1, id2 string) ([]graph.Path, QT) {
+func (m *Member) ComputeMember(id1, id2 string) ([]graph.Path, QT, int64) {
 	con := createConnection()
 	defer con.Close()
 	RelationNode := "MATCH (p1:Member),(p2:Member) ,path = shortestpath((p1)-[*]-(p2)) where p1.id='" + id1 + "' and  p2.id='" + id2 + "' RETURN path"
@@ -376,9 +403,9 @@ func (m *Member) ComputeMember(id1, id2 string) ([]graph.Path, QT) {
 	st := prepareSatement(RelationNode, con)
 	rows := queryStatement(st)
 	// fmt.Println(rows)
-	gps, js := consumeMetadata(rows, st)
+	gps, js, diff := consumeMetadata(rows, st)
 
-	return gps, js
+	return gps, js, diff
 }
 
 func (m *Member) GetMember(name string) []Member {

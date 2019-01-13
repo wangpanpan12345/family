@@ -12,7 +12,38 @@ type FamilyController struct {
 
 func (c *FamilyController) Get() {
 
+	c.LoginCheck()
+
 	c.TplName = "view.tpl"
+}
+
+func (c *FamilyController) LoginCheck() {
+	// sess := this.StartSession()
+	sess_uid := c.GetSession("userid")
+	// sess_username := this.GetSession("username")
+	// beego.Debug(sess_uid, sess_username)
+	beego.Debug(sess_uid)
+	if sess_uid == nil {
+		c.Ctx.Redirect(302, "/admin/login")
+		return
+	}
+}
+
+func (this *FamilyController) DCLogin() {
+	this.Ctx.Request.ParseForm()
+	username := this.Ctx.Request.Form.Get("username")
+	password := this.Ctx.Request.Form.Get("password")
+	if username == "sxjp" && password == "2019" {
+		sess := this.StartSession()
+		sess.Set("userid", username)
+		// fmt.Println(sess.Get("finanuser"))
+		this.Redirect("/member", 301)
+		// this.S
+		// this.TplName = "urlManage.tpl"
+	} else {
+		this.Redirect("/admin/login", 301)
+	}
+
 }
 
 //添加一个成员
@@ -106,7 +137,7 @@ func (c *FamilyController) ShowThreeMember() {
 	id := c.Input().Get("id")
 	// id = "eb3cb4bc37d487a808bd54885a7f5e8a"
 	memberModel := models.Member{}
-	ms, js := memberModel.ListG3Member(id)
+	ms, js, diff := memberModel.ListG3Member(id)
 	for k, v := range ms {
 		beego.Debug(k, v)
 	}
@@ -116,9 +147,10 @@ func (c *FamilyController) ShowThreeMember() {
 	resp.Data = js
 	resp.Pager = ms
 	resp.Errcode = 0
+	resp.Diff = diff
 	resp.Errmsg = "success"
 	c.Data["json"] = resp
-
+	beego.Debug(resp.Diff)
 	c.ServeJSON()
 	// beego.Debug(ms)
 }
@@ -130,7 +162,7 @@ func (c *FamilyController) ComputeMember() {
 
 	// id = "eb3cb4bc37d487a808bd54885a7f5e8a"
 	memberModel := models.Member{}
-	ms, js := memberModel.ComputeMember(id1, id2)
+	ms, js, diff := memberModel.ComputeMember(id1, id2)
 	for k, v := range ms {
 		beego.Debug(k, v)
 	}
@@ -140,6 +172,7 @@ func (c *FamilyController) ComputeMember() {
 	resp.Data = js
 	resp.Pager = ms
 	resp.Errcode = 0
+	resp.Diff = diff
 	resp.Errmsg = "success"
 	c.Data["json"] = resp
 
